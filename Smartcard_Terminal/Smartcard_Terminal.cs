@@ -33,7 +33,6 @@ namespace Smartcard_Terminal
             qr_Code = new Helper_QR_Code(this);
             crypt_AES = new CryptLib();
             dh_Helper = new diffieHellman();
-
         }
 
         public Image Gen_QRCode(Boolean encrypt, int code)
@@ -119,6 +118,18 @@ namespace Smartcard_Terminal
             }
         }
 
+        public Boolean SendMessage(int code, string message)
+        {
+            if (BT_is_Connected)
+            {
+                return bt_Connection.SendMessage(code, message);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         private void receiveMessage(collection_Messages recMessage)
         {
             //Console.WriteLine("SC_Terminal: " + recMessage.Message);
@@ -126,38 +137,10 @@ namespace Smartcard_Terminal
             newMessageEventArgs myArgs = new newMessageEventArgs(recMessage._code, recMessage._message);
             newMessagereceived?.Invoke(this, myArgs);
 
-
-            switch (recMessage.Code)
-            {
-                case 0:
-                    BT_connectionState = recMessage.Message;
-                    break;
-                case 1:
-                    BT_connectionState = recMessage.Message;
-                    break;
-                case 2:
-                    BT_connectionState = recMessage.Message;
-                    BT_is_Connected = true;
-                    break;
-                case 3:
-                    BT_connectionState = recMessage.Message;
-                    BT_is_Connected = false;
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    break;
-                default:
-                    BT_connectionState = recMessage.Message;
-                    BT_is_Connected = false;
-                    break;
-            }
-
-
-
-
-            // END OF CLASS
+            BT_is_Connected = bt_Connection.BT_is_Connected();
         }
+
+        // END OF CLASS
 
         public class newMessageEventArgs : EventArgs
         {

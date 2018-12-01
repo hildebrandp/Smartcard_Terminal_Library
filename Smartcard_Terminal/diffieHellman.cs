@@ -74,12 +74,7 @@ namespace Smartcard_Terminal
         public void set_public_B(String pub_B)
         {
             public_B = BigInteger.Parse(pub_B);
-
             private_Shared = BigInteger.ModPow(public_B, private_a, public_p);
-
-            Console.WriteLine("==========================================================================================");
-            Console.WriteLine("Private Shared: " + private_Shared.ToString());
-            Console.WriteLine("==========================================================================================");
         }
 
         public String get_Shared_Secret()

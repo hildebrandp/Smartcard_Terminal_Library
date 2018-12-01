@@ -133,6 +133,7 @@ namespace Smartcard_Terminal
 
             if (client.Connected)
             {
+                btName = client.RemoteMachineName;
                 Console.WriteLine("Connection established.");
             }
 
@@ -146,8 +147,6 @@ namespace Smartcard_Terminal
 
             int code = Int32.Parse(message[1]);
             string data = message[2];
-
-            //wtr_2.Close();
 
             if (code == 0 && data.Equals("connected"))
             {
@@ -165,8 +164,6 @@ namespace Smartcard_Terminal
 
                 SendMessage(1, "connected");
 
-                collection_Messages tmp = new collection_Messages(0, 2, "connected");
-                newMessageCallback(tmp);
                 is_BT_Connected = true;
                 btName = client.RemoteMachineName;
 
@@ -311,6 +308,11 @@ namespace Smartcard_Terminal
             }
         }
         
+        public Boolean BT_is_Connected()
+        {
+            return is_BT_Connected;
+        }
+
         public void ResultCallback(int id, int code, String data)
         {
             if (scTerminal.Get_encryption_state())
@@ -318,17 +320,18 @@ namespace Smartcard_Terminal
                 data = cryptLib.decrypt(data, AES_KEY, AES_IV);
             }
 
-            collection_Messages tmp;
+            collection_Messages tmp = new collection_Messages(0, code, data);
+            newMessageCallback(tmp);
+
             Console.WriteLine("ID: " + id + ", CODE: " + code + ", MESSAGE: " + data);
+
             switch (code)
             {
                 case 1:
                     switch (data)
                     {
                         case "application_stop":
-                            is_BT_Connected = false; 
-                            tmp = new collection_Messages(0, 3, data);
-                            newMessageCallback(tmp);
+                            is_BT_Connected = false;                             
                             StopBTConnection();
                             break;
                         case "smartcard_discovered":
@@ -338,30 +341,15 @@ namespace Smartcard_Terminal
                             Console.WriteLine("Smartcard connection refused.");
                             break;
                         case "smartcard_connected":
-                            tmp = new collection_Messages(0, 1, "smartcardConnected");
-                            newMessageCallback(tmp);
                             Console.WriteLine("smartcardConnected");
                             break;
                         case "smartcard_disconnected":
-                            tmp = new collection_Messages(0, 1, "smartcardDisconnected");
-                            newMessageCallback(tmp);
                             Console.WriteLine("smartcardDisconnected");
                             break;
                         default:
                             Console.WriteLine("Error Receiving Message");
                             break;
                     }
-                    break;
-                case 2:
-                    tmp = new collection_Messages(0, 4, data);
-                    newMessageCallback(tmp);
-                    break;
-                default:
-                    is_BT_Connected = false;
-                    connectionState = data;
-                    tmp = new collection_Messages(0, code, data);
-                    newMessageCallback(tmp);
-                    StopBTConnection();
                     break;
             }
         }
