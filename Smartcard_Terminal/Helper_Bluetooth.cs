@@ -1,22 +1,29 @@
 ﻿using System;
 using System.Threading;
 using System.IO;
-using System.Timers;
 using InTheHand.Net;
-using InTheHand.Devices.Bluetooth;
 using InTheHand.Net.Bluetooth;
 using InTheHand.Net.Sockets;
 using System.Collections.Generic;
 
-
+/// <summary>
+/// Class for the Bluetooth-Connection
+/// Accept connections and send and receive Data
+/// </summary>
 namespace Smartcard_Terminal
 {
+    /// <summary>
+    /// Static Calss for static Objects
+    /// </summary>
     public static class Messages_List
     {
         public static List<collection_Messages> _Messages = new List<collection_Messages>();
         public static int messageNumber = 0;
     }
 
+    /// <summary>
+    /// Bluetooth-Class
+    /// </summary>
     public class Helper_Bluetooth
     {
         Smartcard_Terminal scTerminal;
@@ -42,6 +49,11 @@ namespace Smartcard_Terminal
         private static string connectionState { get; set; }
         private static Boolean is_BT_Connected { get; set; }
 
+        /// <summary>
+        /// Class Constructor
+        /// </summary>
+        /// <param name="scTerminal">Smartcard_Terminal instance</param>
+        /// <param name="callbackDelegate">receiveMessageCallback object</param>
         public Helper_Bluetooth(Smartcard_Terminal scTerminal, receiveMessageCallback callbackDelegate)
         {
             this.scTerminal = scTerminal;
@@ -117,6 +129,10 @@ namespace Smartcard_Terminal
             }   
         }
 
+        /// <summary>
+        /// Method for Accepting connection request
+        /// </summary>
+        /// <returns>true is connection is estabished</returns>
         public Boolean openConnection()
         {
             Console.WriteLine("Accept Connection...");
@@ -183,6 +199,12 @@ namespace Smartcard_Terminal
             return false;
         }
 
+        /// <summary>
+        /// Method for sending async message
+        /// </summary>
+        /// <param name="code">Code for Android-App</param>
+        /// <param name="msg">Message</param>
+        /// <returns>true if message is send</returns>
         public Boolean SendMessage(int code, String msg)
         {
             if (client.Connected)
@@ -209,6 +231,12 @@ namespace Smartcard_Terminal
             return false;
         }
 
+        /// <summary>
+        /// Method for sync message send
+        /// </summary>
+        /// <param name="code">Code for Android-App</param>
+        /// <param name="msg">Message</param>
+        /// <returns>returns received message</returns>
         public collection_Messages SendandReceiveMessage(int code, String msg)
         {
             if (client.Connected)
@@ -265,6 +293,9 @@ namespace Smartcard_Terminal
             return null;
         }
 
+        /// <summary>
+        /// Method for cancel Bluetooth connection
+        /// </summary>
         public void StopBTConnection()
         {
             if (client.Connected)
@@ -308,14 +339,24 @@ namespace Smartcard_Terminal
             }
         }
         
+        /// <summary>
+        /// Getter Method for checking connection state
+        /// </summary>
+        /// <returns>true is connected</returns>
         public Boolean BT_is_Connected()
         {
             return is_BT_Connected;
         }
 
+        /// <summary>
+        /// Method that receives message from thread
+        /// </summary>
+        /// <param name="id">ID of message</param>
+        /// <param name="code">Code of message</param>
+        /// <param name="data">message</param>
         public void ResultCallback(int id, int code, String data)
         {
-            if (scTerminal.Get_encryption_state())
+            if (scTerminal.Get_encryption_state() && code != 99)
             {
                 data = cryptLib.decrypt(data, AES_KEY, AES_IV);
             }
@@ -348,6 +389,8 @@ namespace Smartcard_Terminal
                             break;
                         default:
                             Console.WriteLine("Error Receiving Message");
+                            is_BT_Connected = false;
+                            StopBTConnection();
                             break;
                     }
                     break;
@@ -357,14 +400,28 @@ namespace Smartcard_Terminal
     // END OF HELPER_BLUETOOTH CLASS !!!!        
     }
 
+    /// <summary>
+    /// Delegate for sending message to Bluetooth Class from thread
+    /// </summary>
+    /// <param name="id">ID of message</param>
+    /// <param name="code">Code of message</param>
+    /// <param name="data">message</param>
     public delegate void receiveCallback(int id, int code, String message);
 
+    /// <summary>
+    /// Class with thread which receives all messages
+    /// </summary>
     public class AcceptMessages
     {
         private BluetoothClient client;
         private StreamReader wtr_2;
         private receiveCallback receiveDelegate;
 
+        /// <summary>
+        /// Constructor that init the Streamreader for receiving messages
+        /// </summary>
+        /// <param name="client">BluetoothClient instance</param>
+        /// <param name="receiveDelegate">Delegate object for sending message to BluetoothClient class</param>
         public AcceptMessages(BluetoothClient client, receiveCallback receiveDelegate)
         {
             this.client = client;
@@ -374,6 +431,9 @@ namespace Smartcard_Terminal
             wtr_2 = new StreamReader(peerStream);
         }
 
+        /// <summary>
+        /// Thread Method that checks for new messages
+        /// </summary>
         public void CheckForMessages()
         {
             try
@@ -396,13 +456,11 @@ namespace Smartcard_Terminal
                     }
                 }
             }
-            catch (Exception e)
+            catch(Exception e)
             {
-                Console.WriteLine("Error: " + e);
-            }
-
-            receiveDelegate(0, 99, "Connection_Refused");
-            wtr_2.Close();        
+                receiveDelegate(0, 99, "Connection_Refused");
+                wtr_2.Close();
+            }      
         }
     }
 }

@@ -4,6 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+/// <summary>
+/// Class for APDU response Codes
+/// Class is not used!!
+/// </summary>
 namespace Smartcard_Terminal
 {
     class Helper_Smartcard_ResponseCode

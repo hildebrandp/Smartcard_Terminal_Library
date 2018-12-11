@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QRCoder;
 using System.Drawing;
 
+/// <summary>
+/// Class for generating QR-Code
+/// Implements the QR-Coder Library
+/// </summary>
 namespace Smartcard_Terminal
 {
     /// <summary>
@@ -19,12 +19,22 @@ namespace Smartcard_Terminal
         private Bitmap qrCodeImage;
         private Smartcard_Terminal terminal;
 
+        /// <summary>
+        /// Contructor of Class
+        /// </summary>
+        /// <param name="terminal">Smartcard_Terminal Instance</param>
         public Helper_QR_Code(Smartcard_Terminal terminal)
         {
             this.terminal = terminal;
             qrGenerator = new QRCodeGenerator();
         }
 
+        /// <summary>
+        /// Method for generating the QR-Code with the Bluetooth-Adress
+        /// </summary>
+        /// <param name="encrypt">true is Data should be encrypted</param>
+        /// <param name="debugCode">Debug Code for Android-App</param>
+        /// <returns>Image object of QR-COde</returns>
         public Image genQRCode(Boolean encrypt, int debugCode)
         {
             String text;
